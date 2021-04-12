@@ -10,13 +10,10 @@
 
 void PrepareData(std::string inName, std::string outName) {
     std::ifstream in(inName);
-    if (in.bad()){
+    if (!in.is_open()){
         throw std::runtime_error("Couldn't find file " + inName);
     }
     std::ofstream out(outName);
-    if (out.bad()){
-        throw std::runtime_error("Couldn't find file " + outName);
-    }
     std::string s;
     std::vector < std::string > suffixes;
     while (in >> s){

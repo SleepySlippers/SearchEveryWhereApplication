@@ -1,11 +1,8 @@
 #include <QApplication>
-#include <QTextBlock>
 #include <QLineEdit>
-#include <QLabel>
 #include <QBoxLayout>
-#include <fstream>
 #include <QTextEdit>
-#include <QThread>
+#include <fstream>
 
 #include "preparer.h"
 
@@ -73,7 +70,7 @@ private:
         const int BUF_SZ = 100;
         buf = new char[BUF_SZ];
         while (r - l > 1){
-            uintmax_t m = r + l >> 1;
+            uintmax_t m = (r + l) >> 1;
             prepared_data.seekg(m);
             prepared_data.getline(buf, BUF_SZ);
             prepared_data.getline(buf, BUF_SZ);
@@ -88,19 +85,18 @@ private:
         prepared_data.getline(buf, BUF_SZ);
         r += strlen(buf);
         delete buf;
-        ++r;
-        ++r;
+        r += 2;
         return r;
     }
 
     static void PreparedDataCheck(){
         std::ifstream prepared_data("DataPreparer/prepared.txt");
-        if (prepared_data.bad()){
+        if (!prepared_data.is_open()){
             std::ifstream tmp("words.txt");
-            if (tmp.bad()){
+            if (!tmp.is_open()){
                 throw std::runtime_error("No dictionary file : words.txt");
             }
-            PrepareData("../words.txt", "prepared.txt");
+            PrepareData("words.txt", "DataPreparer/prepared.txt");
         }
     }
 
