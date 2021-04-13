@@ -18,7 +18,7 @@
 // Only MakeSharedForEvaluatorPtr can create instance of Evaluator
 // Only one consumer supported
 
-class Evaluator : public std::enable_shared_from_this<Evaluator> {
+class Evaluator {
 public:
 
     static std::shared_ptr<Evaluator> MakeSharedForEvaluatorPtr(std::string s);

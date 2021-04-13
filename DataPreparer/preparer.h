@@ -7,6 +7,6 @@
 
 #include <string>
 
-void PrepareData(std::string inName, std::string outName);
+void PrepareData(const std::string &inName, const std::string &outName);
 
 #endif //SEARCHEVERYWHERE_PREPERARER_H
