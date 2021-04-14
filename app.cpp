@@ -2,7 +2,6 @@
 #include <QLineEdit>
 #include <QBoxLayout>
 
-#include "Evaluator.h"
 #include "WordsPrinter.h"
 
 int main(int argc, char *argv[]) {

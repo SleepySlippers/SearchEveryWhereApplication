@@ -28,7 +28,7 @@ void WordsPrinter::RequestChanged(const QString &s) {
         used_.clear();
         need_to_stop_printing_ = false;
         printing_done_ = false;
-        current_evaluator_ = Evaluator::MakeSharedForEvaluatorPtr(s.toStdString());
+        current_evaluator_ = TrieEvaluator::MakeSharedForEvaluatorPtr(s.toStdString());
         while (!current_evaluator_->IsDrained()) {
             std::string ans;
             for (size_t i = 0; i < 100 && !current_evaluator_->IsDrained(); ++i) {

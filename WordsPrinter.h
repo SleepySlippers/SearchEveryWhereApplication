@@ -5,7 +5,8 @@
 #ifndef SEARCHEVERYWHEREAPPLICATION_WORDSPRINTER_H
 #define SEARCHEVERYWHEREAPPLICATION_WORDSPRINTER_H
 
-#include "Evaluator.h"
+//#include "Evaluator.h"
+#include "TrieEvaluator.h"
 #include <chrono>
 #include <thread>
 #include <QObject>
@@ -24,9 +25,9 @@ public:
     WordsPrinter& operator=(const WordsPrinter&) = delete;
     WordsPrinter& operator=(WordsPrinter&&) = delete;
 
-    ~WordsPrinter(){
+    ~WordsPrinter() override {
         need_to_stop_printing_ = true;
-        if (printer_thread_.joinable()){
+        if (printer_thread_.joinable()) {
             printer_thread_.join();
         }
     }
@@ -57,7 +58,7 @@ private:
         printing_done_ = true;
     }
 
-    std::shared_ptr<Evaluator> current_evaluator_;
+    std::shared_ptr<TrieEvaluator> current_evaluator_;
     QLabel status_;
     QTextEdit results_;
     std::unordered_set<std::string> used_;

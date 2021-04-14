@@ -7,6 +7,7 @@
 
 #include <string>
 
+using PrimeSize = uint32_t;
 void PrepareData(const std::string &inName, const std::string &outName);
 
 #endif //SEARCHEVERYWHERE_PREPERARER_H

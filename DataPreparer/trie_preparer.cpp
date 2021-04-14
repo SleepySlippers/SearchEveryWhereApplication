@@ -4,113 +4,140 @@
 
 #include "preparer.h"
 #include <fstream>
-#include <utility>
 #include <vector>
 #include <unordered_map>
 #include <cstring>
 #include <iostream>
+#include <algorithm>
 
-class Trie {
+#pragma GCC optimize("Ofast")
+
+size_t printed = 0;
+size_t printing = 0;
+
+class LightTrie {
+private:
+    class Node;
+
 public:
-    using PrimeSize = size_t;
 
-    explicit Trie(std::unordered_map<char, size_t> alphabet) : alphabet_map_(std::move(alphabet)),
-                                                               alphabet_sz_(alphabet_map_.size()) {
-        raw_data.resize((alphabet_sz_ + 1));
-        memset(&raw_data[0], 0, (alphabet_sz_ + 1) * sizeof(PrimeSize));
-    }
-
-    explicit Trie(const std::string &alphabet) : alphabet_map_(BuildAlphabetMap(alphabet)),
-                                                 alphabet_sz_(alphabet_map_.size()) {
-        raw_data.resize((alphabet_sz_ + 1));
-        memset(&raw_data[0], 0, (alphabet_sz_ + 1) * sizeof(PrimeSize));
-    }
-
-    PrimeSize AddNode(PrimeSize parent_begin, PrimeSize letter_num) {
-        ++node_numb;
-        PrimeSize prev_size = raw_data.size();
-        raw_data[parent_begin + letter_num] = prev_size;
-        raw_data.resize(prev_size + (alphabet_sz_ + 1));
-        memset(&raw_data[prev_size], 0, (alphabet_sz_ + 1) * sizeof(PrimeSize));
-        return prev_size;
-    }
-
-    void AddNumb(PrimeSize parent, PrimeSize val) {
-        ++num_num;
-        PrimeSize prev = raw_data[parent + alphabet_sz_];
-        raw_data[parent + alphabet_sz_] = raw_data.size();
-        raw_data.push_back(val);
-        raw_data.push_back(prev);
-    }
+    LightTrie() : root_(new Node()) {}
 
     void AddString(const std::string &s, PrimeSize num) {
-        PrimeSize cur = 0;
+        Node *cur = root_;
         for (char c: s) {
-            if (!alphabet_map_.count(c)) {
-                throw std::runtime_error("trying to add string with char out of alphabet");
-            }
-            if (raw_data[cur + alphabet_map_[c]] == 0) {
-                cur = AddNode(cur, alphabet_map_[c]);
+            if (cur->links.count(c)) {
+                cur = cur->links[c];
             } else {
-                cur = raw_data[cur + alphabet_map_[c]];
+                ++node_numb;
+                cur = AddNode(cur, c);
             }
         }
+        ++num_num;
         AddNumb(cur, num);
-    }
-
-    static std::unordered_map<char, size_t> BuildAlphabetMap(const std::string &s) {
-        std::unordered_map<char, size_t> ans;
-        for (char c: s) {
-            if (!ans.count(c)) {
-                ans[c] = ans.size();
-            }
-        }
-        return ans;
-    }
-
-    const char *GetRawData() const {
-        return reinterpret_cast<const char *>(&raw_data[0]);
-    }
-
-    PrimeSize GetRawDataSize() const {
-        return raw_data.size() * sizeof(PrimeSize);
     }
 
     size_t node_numb = 0;
     size_t num_num = 0;
 
+    ~LightTrie() {
+        delete root_;
+    }
+
+    void Print(std::ofstream &out) const {
+        root_->Print(out);
+    }
+
+
+    Node *root_;
+
 private:
-    std::unordered_map<char, size_t> alphabet_map_;
-    const size_t alphabet_sz_;
-    std::vector<PrimeSize> raw_data;
+    static Node *AddNode(Node *parent, char c) {
+        return parent->links[c] = new Node();
+    }
+
+    static void AddNumb(Node *node, PrimeSize num) {
+        node->numbs.push_back(num);
+    }
+
+    class Node {
+    public:
+        std::unordered_map<char, Node *> links;
+        std::vector<PrimeSize> numbs;
+
+        PrimeSize Print(std::ofstream &out) {
+            ++printing;
+            if (printing % 100 == 0)
+                std::cout << "Printing: " << printing << std::endl;
+
+            PrimeSize ans = out.tellp();
+            PrimeSize tmp = numbs.size();
+            out.write(reinterpret_cast<char *>(&tmp), sizeof(tmp));
+            out.write(reinterpret_cast<char *>(&numbs[0]), tmp * sizeof(PrimeSize));
+            tmp = links.size();
+            out.write(reinterpret_cast<char *>(&tmp), sizeof(tmp));
+            std::vector<std::pair<char, PrimeSize>> vec;
+            for (auto it: links) {
+                vec.emplace_back(it.first, 0);
+            }
+            PrimeSize links_beg = out.tellp();
+            std::sort(vec.begin(), vec.end());
+            const size_t SIZEOF_PAIR = sizeof(char) + sizeof(PrimeSize);
+            //out.seekp(links_beg + vec.size() * SIZEOF_PAIR);
+            char *raw = new char[(SIZEOF_PAIR) * vec.size()];
+            memset(raw, 0, (SIZEOF_PAIR) * vec.size());
+            out.write(raw, vec.size() * SIZEOF_PAIR);
+            for (auto &i : vec) {
+                out.seekp(0, std::ios::end);
+                i.second = links[i.first]->Print(out);
+            }
+            for (size_t i = 0; i < vec.size(); ++i) {
+                raw[i * SIZEOF_PAIR] = vec[i].first;
+                *reinterpret_cast<PrimeSize *>(&raw[i * SIZEOF_PAIR + sizeof(char)]) = vec[i].second;
+            }
+            out.seekp(links_beg);
+            out.write(raw, vec.size() * SIZEOF_PAIR);
+            delete[] raw;
+            ++printed;
+            if (printed % 100 == 0)
+                std::cout << "Printed: " << printed << std::endl;
+            return ans;
+        }
+
+        ~Node() {
+            for (auto it: links) {
+                delete it.second;
+            }
+        }
+    };
 };
 
 void PrepareData(const std::string &inName, const std::string &outName) {
-    std::unordered_map<char, size_t> alphabet;
-    { // find alphabet
-        std::ifstream in(inName);
-        if (!in.is_open()) {
-            throw std::runtime_error("Couldn't find file " + inName);
-        }
-        std::string s;
-        while (in >> s) {
-            for (char c: s) {
-                c = static_cast<char>(std::tolower(c));
-                if (!alphabet.count(c)) {
-                    alphabet[c] = alphabet.size();
-                }
-            }
-        }
+    /*std::vector<PrimeSize> suf = {4, 6, 2, 5, 3, 5, 3};
+    {
+        std::ofstream out("test.txt", std::ios::binary);
+        out.write(reinterpret_cast<char*>(&suf[0]), suf.size() * sizeof(PrimeSize));
     }
-    Trie suf_trie(alphabet);
-    //std::ofstream out(outName);
+    size_t sz = suf.size();
+    suf.clear();
+    suf.resize(sz);
+    {
+        std::ifstream in("test.txt", std::ios::binary);
+        in.read(reinterpret_cast<char*>(&suf[0]), sz * sizeof(PrimeSize));
+    }
+    for (auto it: suf){
+        std::cout << it << " ";
+    }
+    return;*/
+    LightTrie suf_trie;
     std::ifstream in(inName);
     if (!in.is_open()) {
         throw std::runtime_error("Couldn't find file " + inName);
     }
-    std::string s;
+    char buf[100];
     auto cur_pos = in.tellg();
-    while (in >> s) {
+    while (in.getline(buf, sizeof(buf))) {
+        std::string s(buf);
         for (char &c: s) {
             c = static_cast<char>(std::tolower(c));
         }
@@ -121,5 +148,5 @@ void PrepareData(const std::string &inName, const std::string &outName) {
     }
     std::cout << "Nodes: " << suf_trie.node_numb << " Nums: " << suf_trie.num_num << std::endl;
     std::ofstream out(outName, std::ios::binary);
-    out.write(suf_trie.GetRawData(), static_cast<long long>(suf_trie.GetRawDataSize()));
+    suf_trie.Print(out);
 }

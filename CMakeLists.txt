@@ -14,7 +14,7 @@ set(QT_VERSION 6)
 set(REQUIRED_LIBS Core Gui Widgets)
 set(REQUIRED_LIBS_QUALIFIED Qt6::Core Qt6::Gui Qt6::Widgets)
 
-add_executable(${PROJECT_NAME} app.cpp Evaluator.cpp utils.cpp WordsPrinter.cpp)
+add_executable(${PROJECT_NAME} app.cpp Evaluator.cpp utils.cpp WordsPrinter.cpp TrieEvaluator.cpp)
 
 target_link_libraries(${PROJECT_NAME} DataPreparer)
 target_include_directories(${PROJECT_NAME} PUBLIC DataPreparer)

@@ -19,15 +19,10 @@
 // Only one consumer supported
 
 class Evaluator {
+    class InstanceCreateDefender;
 public:
 
     static std::shared_ptr<Evaluator> MakeSharedForEvaluatorPtr(std::string s);
-
-    class InstanceCreateDefender {
-        friend std::shared_ptr<Evaluator> Evaluator::MakeSharedForEvaluatorPtr(std::string s);
-
-        InstanceCreateDefender() = default;
-    };
 
     explicit Evaluator(std::string s, const InstanceCreateDefender &);
 
@@ -47,17 +42,23 @@ public:
 
 private:
 
+    class InstanceCreateDefender {
+        friend std::shared_ptr<Evaluator> Evaluator::MakeSharedForEvaluatorPtr(std::string s);
+
+        InstanceCreateDefender() = default;
+    };
+
     static std::string GlueString(char *buf);
 
     void Evaluate();
 
     uintmax_t FindFirstMatching() const;
 
+    std::string s_;
     std::thread evaluation_thread_;
+
     std::mutex mutex_;
     std::deque<std::string> que; // Guarded by mutex_
-
-    std::string s_;
     bool evaluated_ = false;
     bool done_ = false;
     bool need_to_evaluate = true;
