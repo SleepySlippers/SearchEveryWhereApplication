@@ -79,7 +79,6 @@ void TrieEvaluator::TrieTraverse(PrimeSize cur, std::ifstream &prepared_data, st
     for (size_t i = 0; i < links_size; ++i) {
         char link_let;
         ReadRawData(prepared_data, link_let);
-        cur = prepared_data.tellg();
         link_dsts.push_back(0);
         ReadRawData(prepared_data, link_dsts.back());
     }
